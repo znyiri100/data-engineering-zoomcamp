@@ -1,0 +1,21 @@
+flowchart TD
+    A[Start] --> B[Connect to PostgreSQL]
+    B --> C[Ingest Zones Table]
+    C --> D[Download taxi_zone_lookup.csv]
+    D --> E[Load CSV into DataFrame]
+    E --> F[Write DataFrame to 'zones' table]
+    F --> G[Ingest Green Taxi Data]
+    G --> H[Construct Parquet URL]
+    H --> I{Parquet file exists?}
+    I -- No --> J[Download Parquet file]
+    I -- Yes --> K[Skip download]
+    J --> L[Open Parquet file]
+    K --> L[Open Parquet file]
+    L --> M[Iterate over batches]
+    M --> N[Convert batch to DataFrame]
+    N --> O{First batch?}
+    O -- Yes --> P[Create target table]
+    O -- No --> Q[Append to table]
+    P --> Q
+    Q --> R[Repeat for all batches]
+    R --> S[End]
