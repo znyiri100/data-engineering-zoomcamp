@@ -29,7 +29,7 @@ What's the version of `pip` in the image?
 @codespaces-2dd6f3:/workspaces/docker-workshop/01-docker-terraform/pipeline
 > docker run -it  --entrypoint=bash python:3.13.10
 root@e6198cb965f9:/# pip -V
-pip 25.3 from /usr/local/lib/python3.13/site-packages/pip (python 3.13)
+pip XXX from /usr/local/lib/python3.13/site-packages/pip (python 3.13)
 root@e6198cb965f9:/# 
 exit
 @codespaces-2dd6f3:/workspaces/docker-workshop/01-docker-terraform/pipeline
@@ -213,7 +213,7 @@ postgres@localhost:ny_taxi> select count(trip_distance) from "green_tripdata_202
 +-------+
 | count |
 |-------|
-| 8007  |
+| XXXX  |
 +-------+
 ```
 
@@ -228,12 +228,14 @@ Use the pick up time for your calculations.
 - 2025-11-23
 - 2025-11-25
 
+```bash
 postgres@localhost:ny_taxi> select trip_distance, lpep_pickup_datetime  from "green_tripdata_2025-11" where trip_distance<100 order by trip_distance desc limit 1;
 +---------------+----------------------+
 | trip_distance | lpep_pickup_datetime |
 |---------------+----------------------|
-| 88.03         | 2025-11-14 15:36:27  |
+| 88.03         | XXXXXXXXXXXXXXXXXXX  |
 +---------------+----------------------+
+```
 
 ## Question 5. Biggest pickup zone
 
@@ -250,7 +252,7 @@ postgres@localhost:ny_taxi> select b."Zone", sum(a.total_amount) from "green_tri
 +-------------------+-------------------+
 | Zone              | sum               |
 |-------------------+-------------------|
-| East Harlem North | 9281.919999999996 |
+| XXXXXXXXXXXXXXXXX | 9281.919999999996 |
 +-------------------+-------------------+
 ```
 
@@ -275,7 +277,7 @@ postgres@localhost:ny_taxi> select b."Zone", a.tip_amount from "green_tripdata_2
 +----------------+------------+
 | Zone           | tip_amount |
 |----------------+------------|
-| Yorkville West | 81.89      |
+| XXXXXXXXXXXXXX | 81.89      |
 +----------------+------------+
 ```
 
