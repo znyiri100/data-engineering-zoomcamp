@@ -209,3 +209,5 @@ __marimo__/
 *.parquet
 ny_taxi_postgres_data
 taxi_zone_lookup.csv
+gcs.json
+*.csv.gz
