@@ -169,6 +169,34 @@ CREATE OR REPLACE TABLE `kestra-sandbox-8656`.`nytaxi`.`yellow_tripdata` AS SELE
 Data location US
 ```
 
+```
+bq ls
+
+               datasetId                
+ -------------------------------------- 
+  nytaxi                                
+  rides_dataset                         
+  zoomcamp_dataset_kestra_sandbox_8656
+
+bq ls nytaxi
+
+          tableId              Type     Labels   Time Partitioning   Clustered Fields  
+ -------------------------- ---------- -------- ------------------- ------------------ 
+  green_tripdata             TABLE                                                     
+  green_tripdata_external    EXTERNAL                                                  
+  yellow_tripdata            TABLE                                                     
+  yellow_tripdata_external   EXTERNAL   
+
+bq show kestra-sandbox-8656:nytaxi.green_tripdata
+
+bq query 'SELECT COUNT(*) FROM kestra-sandbox-8656.nytaxi.green_tripdata'
++---------+
+|   f0_   |
++---------+
+| 7778101 |
++---------+
+```
+
 ## Step 2: Sign Up for dbt Platform
 
 dbt Platform is dbt's cloud-based development environment with a web IDE, scheduler, and collaboration features. dbt offers a **free Developer plan**. This should be more than enough to learn dbt and follow the course.
