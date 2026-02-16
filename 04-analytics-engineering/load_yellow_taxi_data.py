@@ -22,6 +22,7 @@ client = storage.Client.from_service_account_json(CREDENTIALS_FILE)
 # BASE_URL = "https://github.com/DataTalksClub/nyc-tlc-data/releases/yellow_tripdata_2024-"
 MONTHS = [f"{i:02d}" for i in range(1, 13)]
 YEARS = [2019, 2020]
+YEARS = [2019]
 # Updated to handle years and months correctly in the loop
 DOWNLOAD_DIR = "./data"
 
@@ -110,16 +111,25 @@ def upload_to_gcs(file_path, max_retries=3):
 if __name__ == "__main__":
     create_bucket(BUCKET_NAME)
 
-    TYPE = "green"
-    for year in YEARS:
-        with ThreadPoolExecutor(max_workers=4) as executor:
-            # Create a list of (year, month) tuples for the executor
-            args = [(year, month) for month in MONTHS]
-            file_paths = list(executor.map(lambda p: download_file(*p), args))
-        with ThreadPoolExecutor(max_workers=4) as executor:
-            executor.map(upload_to_gcs, filter(None, file_paths))  # Remove None values
+    # TYPE = "green"
+    # for year in YEARS:
+    #     with ThreadPoolExecutor(max_workers=4) as executor:
+    #         # Create a list of (year, month) tuples for the executor
+    #         args = [(year, month) for month in MONTHS]
+    #         file_paths = list(executor.map(lambda p: download_file(*p), args))
+    #     with ThreadPoolExecutor(max_workers=4) as executor:
+    #         executor.map(upload_to_gcs, filter(None, file_paths))  # Remove None values
 
-    TYPE = "yellow"
+    # TYPE = "yellow"
+    # for year in YEARS:
+    #     with ThreadPoolExecutor(max_workers=4) as executor:
+    #         # Create a list of (year, month) tuples for the executor
+    #         args = [(year, month) for month in MONTHS]
+    #         file_paths = list(executor.map(lambda p: download_file(*p), args))
+    #     with ThreadPoolExecutor(max_workers=4) as executor:
+    #         executor.map(upload_to_gcs, filter(None, file_paths))  # Remove None values
+
+    TYPE = "fhv"
     for year in YEARS:
         with ThreadPoolExecutor(max_workers=4) as executor:
             # Create a list of (year, month) tuples for the executor
