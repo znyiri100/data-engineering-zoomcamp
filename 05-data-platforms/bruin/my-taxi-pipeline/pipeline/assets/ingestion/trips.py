@@ -1,38 +1,13 @@
 """@bruin
 
-# TODO: Set the asset name (recommended pattern: schema.asset_name).
-# - Convention in this module: use an `ingestion.` schema for raw ingestion tables.
 name: ingestion.trips
-
-# TODO: Set the asset type.
-# Docs: https://getbruin.com/docs/bruin/assets/python
-type: python
-
-# TODO: Pick a Python image version (Bruin runs Python in isolated environments).
-# Example: python:3.11
-image: python:3.11
-
-# TODO: Set the connection.
 connection: duckdb-default
 
-# TODO: Choose materialization (optional, but recommended).
-# Bruin feature: Python materialization lets you return a DataFrame (or list[dict]) and Bruin loads it into your destination.
-# This is usually the easiest way to build ingestion assets in Bruin.
-# Alternative (advanced): you can skip Bruin Python materialization and write a "plain" Python asset that manually writes
-# into DuckDB (or another destination) using your own client library and SQL. In that case:
-# - you typically omit the `materialization:` block
-# - you do NOT need a `materialize()` function; you just run Python code
-# Docs: https://getbruin.com/docs/bruin/assets/python#materialization
 materialization:
-  # TODO: choose `table` or `view` (ingestion generally should be a table)
   type: table
-  # TODO: pick a strategy.
-  # suggested strategy: append
   strategy: append
+image: python:3.11
 
-# Output columns for metadata, lineage, and quality checks.
-# Raw TLC columns vary by taxi type; we normalize pickup/dropoff to a single name and add taxi_type, extracted_at.
-# Docs: https://getbruin.com/docs/bruin/assets/columns
 columns:
   - name: pickup_datetime
     type: timestamp
@@ -89,6 +64,12 @@ def _parse_bruin_dates():
     return datetime.strptime(start, "%Y-%m-%d"), datetime.strptime(end, "%Y-%m-%d")
 
 
+def _get_cache_dir():
+    """Get the path to the data cache directory."""
+    # Place it in a 'data' folder next to the pipeline.yml
+    return os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "data")
+
+
 def _get_taxi_types():
     """Read taxi_types from BRUIN_VARS (JSON). Defaults to ['yellow']."""
     raw = os.environ.get("BRUIN_VARS", "{}")
@@ -132,13 +113,32 @@ def materialize():
         year, month = current.year, current.month
         for taxi_type in taxi_types:
             filename = f"{taxi_type}_tripdata_{year}-{month:02d}.parquet"
-            url = f"{BASE_URL}{filename}"
-            try:
-                df = pd.read_parquet(url)
-            except Exception as e:
-                # Skip missing or invalid files (e.g. future months, unavailable data)
-                print(f"Skipping {url}: {e}")
-                continue
+            local_path = os.path.join(_get_cache_dir(), filename)
+
+            if os.path.exists(local_path):
+                print(f"Using cached file: {local_path}")
+                try:
+                    df = pd.read_parquet(local_path)
+                except Exception as e:
+                    print(f"Error reading cached file {local_path}, re-downloading: {e}")
+                    df = None
+            else:
+                df = None
+
+            if df is None:
+                url = f"{BASE_URL}{filename}"
+                print(f"Downloading {url}...")
+                try:
+                    df = pd.read_parquet(url)
+                    # Save to cache
+                    os.makedirs(_get_cache_dir(), exist_ok=True)
+                    df.to_parquet(local_path)
+                    print(f"Saved to cache: {local_path}")
+                except Exception as e:
+                    # Skip missing or invalid files (e.g. future months, unavailable data)
+                    print(f"Skipping {url}: {e}")
+                    continue
+
             df = _normalize_trip_df(df, taxi_type)
             df["taxi_type"] = taxi_type
             df["extracted_at"] = extracted_at

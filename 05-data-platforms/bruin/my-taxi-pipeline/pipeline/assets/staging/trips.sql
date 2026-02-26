@@ -29,7 +29,7 @@ custom_checks:
 
 @bruin */
 
--- connection: your-connection-name
+-- connection: duckdb-default
 SELECT
     t.pickup_datetime,
     t.dropoff_datetime,
