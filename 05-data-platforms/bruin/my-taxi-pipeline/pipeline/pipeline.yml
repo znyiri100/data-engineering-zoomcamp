@@ -35,7 +35,8 @@ variables:
     default: ["green"] # e.g. ["yellow", "green"]
   source_data:
     type: string
-    default: "NYC"
+    default: "DataTalksClub"
+    # default: "NYC"
 #   other_string_var: (optional) Add your own variable and use it in both Python and SQL assets.
 #     type: string
 #     default: "my_value"
