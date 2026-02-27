@@ -70,14 +70,14 @@ def _get_cache_dir():
     return os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "data")
 
 
-def _get_taxi_types():
-    """Read taxi_types from BRUIN_VARS (JSON). Defaults to ['yellow']."""
+def _get_taxi_vars():
+    """Read taxi_types and source_data from BRUIN_VARS (JSON)."""
     raw = os.environ.get("BRUIN_VARS", "{}")
     try:
         vars_ = json.loads(raw) if raw else {}
     except json.JSONDecodeError:
         vars_ = {}
-    return vars_.get("taxi_types", ["yellow"])
+    return vars_.get("taxi_types", ["yellow"]), vars_.get("source_data", "NYC")
 
 
 def _normalize_trip_df(df: pd.DataFrame, taxi_type: str) -> pd.DataFrame:
@@ -99,12 +99,12 @@ def _normalize_trip_df(df: pd.DataFrame, taxi_type: str) -> pd.DataFrame:
 
 def materialize():
     """
-    Ingest NYC TLC trip data from public Parquet files.
-    Uses BRUIN_START_DATE, BRUIN_END_DATE for the date range and BRUIN_VARS (taxi_types) for which types to fetch.
+    Ingest NYC TLC trip data from public Parquet files or DataTalksClub GitHub.
+    Uses BRUIN_START_DATE, BRUIN_END_DATE for the date range and BRUIN_VARS (taxi_types, source_data).
     Keeps data in raw form; adds taxi_type and extracted_at for lineage.
     """
     start_dt, end_dt = _parse_bruin_dates()
-    taxi_types = _get_taxi_types()
+    taxi_types, source_data = _get_taxi_vars()
     extracted_at = datetime.now(timezone.utc)
 
     frames = []
@@ -112,13 +112,24 @@ def materialize():
     while current <= end_dt:
         year, month = current.year, current.month
         for taxi_type in taxi_types:
-            filename = f"{taxi_type}_tripdata_{year}-{month:02d}.parquet"
+            if source_data == "DataTalksClub":
+                # Github format: green_tripdata_2019-01.csv.gz
+                filename = f"{taxi_type}_tripdata_{year}-{month:02d}.csv.gz"
+                url = f"https://github.com/DataTalksClub/nyc-tlc-data/releases/download/{taxi_type}/{filename}"
+            else:
+                # NYC TLC format: green_tripdata_2022-01.parquet
+                filename = f"{taxi_type}_tripdata_{year}-{month:02d}.parquet"
+                url = f"{BASE_URL}{filename}"
+
             local_path = os.path.join(_get_cache_dir(), filename)
 
             if os.path.exists(local_path):
                 print(f"Using cached file: {local_path}")
                 try:
-                    df = pd.read_parquet(local_path)
+                    if filename.endswith(".parquet"):
+                        df = pd.read_parquet(local_path)
+                    else:
+                        df = pd.read_csv(local_path, compression='gzip')
                 except Exception as e:
                     print(f"Error reading cached file {local_path}, re-downloading: {e}")
                     df = None
@@ -126,13 +137,19 @@ def materialize():
                 df = None
 
             if df is None:
-                url = f"{BASE_URL}{filename}"
                 print(f"Downloading {url}...")
                 try:
-                    df = pd.read_parquet(url)
+                    if url.endswith(".parquet"):
+                        df = pd.read_parquet(url)
+                    else:
+                        df = pd.read_csv(url, compression='gzip')
+                    
                     # Save to cache
                     os.makedirs(_get_cache_dir(), exist_ok=True)
-                    df.to_parquet(local_path)
+                    if filename.endswith(".parquet"):
+                        df.to_parquet(local_path)
+                    else:
+                        df.to_csv(local_path, index=False, compression='gzip')
                     print(f"Saved to cache: {local_path}")
                 except Exception as e:
                     # Skip missing or invalid files (e.g. future months, unavailable data)

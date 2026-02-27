@@ -14,7 +14,7 @@ schedule: daily
 
 # TODO: Set the earliest date this pipeline should consider for full refresh backfills.
 # Format: YYYY-MM-DD
-start_date: "2022-01-01"
+start_date: "2019-01-01"
 
 # TODO: Configure default connections so assets can omit explicit `connection: ...`.
 # Common pattern: `duckdb: duckdb-default` for local dev.
@@ -33,6 +33,9 @@ variables:
     items:
       type: string # should be: string
     default: ["green"] # e.g. ["yellow", "green"]
+  source_data:
+    type: string
+    default: "NYC"
 #   other_string_var: (optional) Add your own variable and use it in both Python and SQL assets.
 #     type: string
 #     default: "my_value"
