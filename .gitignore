@@ -218,3 +218,5 @@ logs/*.log
 *.py[cod]
 logs/queries
 duckdb.db
+workshop/my-dlt-pipeline/import_trace.txt
+workshop/my-dlt-pipeline/out.txt
