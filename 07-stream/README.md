@@ -1,0 +1,1 @@
+see homework @ https://github.com/znyiri100/data-engineering-zoomcamp/blob/main/workshop/streaming/homework.md
